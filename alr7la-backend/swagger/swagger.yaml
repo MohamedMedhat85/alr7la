@@ -1,0 +1,1827 @@
+openapi: 3.0.0
+info:
+  title: Alr7la API
+  version: "1.0.0"
+  description: API documentation for Alr7la Node.js backend
+
+servers:
+  - url: https://alr7la-backend-production.up.railway.app/
+
+tags:
+  - name: Auth
+    description: Authentication endpoints
+  - name: Comments
+    description: Endpoints related to comments on posts
+  - name: Posts
+    description: Endpoints related to posts
+  - name: Friends
+    description: Endpoints related to friend management
+  - name: Users
+    description: Endpoints related to user management
+  - name: Profile
+    description: Endpoints related to user profiles
+  - name: Trip
+    description: Endpoints related to travel information
+  - name: Feed
+    description: Endpoints related to personalized feeds
+  - name: Places
+    description: Endpoints related to places and attractions
+  - name: VisitedCountries
+    description: Endpoints related to countries visited by users
+  - name: Weather
+    description: Endpoints for weather information
+  - name: Upload
+    description: Endpoints for file uploads
+  - name: Visa
+    description: Endpoints for visa requirements
+  - name: Reviews
+    description: Endpoints related to place reviews
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  schemas:
+    User:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        email:
+          type: string
+        bio:
+          type: string
+          nullable: true
+        birth_date:
+          type: string
+          format: date
+        gender:
+          type: string
+          enum: [male, female, other]
+        marital_status:
+          type: string
+          enum: [single, married, divorced]
+          default: single
+        profile_picture:
+          type: string
+        wallpaper:
+          type: string
+        country_id:
+          type: integer
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+
+    Post:
+      type: object
+      properties:
+        id:
+          type: integer
+        user_id:
+          type: integer
+        description:
+          type: string
+        number_of_likes:
+          type: integer
+          default: 0
+        visibility:
+          type: string
+          enum: [public, private, only me]
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+        post_source_id:
+          type: integer
+          nullable: true
+        images:
+          type: array
+          items:
+            $ref: "#/components/schemas/PostImage"
+
+    Comment:
+      type: object
+      properties:
+        id:
+          type: integer
+        user_id:
+          type: integer
+        post_id:
+          type: integer
+        parent_comment_id:
+          type: integer
+          nullable: true
+          description: ID of parent comment if this is a reply
+        description:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+        user:
+          $ref: "#/components/schemas/User"
+        replies:
+          type: array
+          items:
+            $ref: "#/components/schemas/Comment"
+          description: Array of replies to this comment
+
+    Review:
+      type: object
+      properties:
+        id:
+          type: integer
+        user_id:
+          type: integer
+        place_id:
+          type: integer
+        description:
+          type: string
+          nullable: true
+        rating:
+          type: number
+          format: float
+          minimum: 0.0
+          maximum: 5.0
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+        user:
+          $ref: "#/components/schemas/User"
+        place:
+          $ref: "#/components/schemas/Place"
+
+    Place:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        longitude:
+          type: number
+          format: float
+        latitude:
+          type: number
+          format: float
+        city:
+          type: string
+        country:
+          type: string
+        country_id:
+          type: integer
+        opening_time:
+          type: string
+          format: time
+        closing_time:
+          type: string
+          format: time
+        rating:
+          type: number
+          format: float
+        number_of_ratings:
+          type: integer
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+        images:
+          type: array
+          items:
+            $ref: "#/components/schemas/PlaceImage"
+
+    Friend:
+      type: object
+      properties:
+        user_id:
+          type: integer
+        friend_id:
+          type: integer
+        status:
+          type: string
+          enum: [pending, accepted, rejected]
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+
+    Trip:
+      type: object
+      properties:
+        tripDetails:
+          type: object
+          properties:
+            id:
+              type: integer
+            trip_name:
+              type: string
+            destination:
+              type: string
+            duration_days:
+              type: integer
+            trip_style:
+              type: string
+              enum: [budget, moderate, luxury]
+            pace:
+              type: string
+              enum: [slow-pace, moderate, fast-pace]
+            start_date:
+              type: string
+              format: date-time
+            end_date:
+              type: string
+              format: date-time
+            status:
+              type: string
+              enum: [planned, ongoing, completed, cancelled]
+        itinerary:
+          type: array
+          items:
+            type: object
+            properties:
+              day:
+                type: integer
+              activities:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    id:
+                      type: integer
+                    time:
+                      type: string
+                    time_window:
+                      type: string
+                      enum: [morning, afternoon, evening, not specified]
+                    place:
+                      type: string
+                    description:
+                      type: string
+                    duration:
+                      type: string
+                    notes:
+                      type: string
+                    location:
+                      type: object
+                      properties:
+                        longitude:
+                          type: string
+                        latitude:
+                          type: string
+                        city:
+                          type: string
+                        country:
+                          type: string
+                        countryId:
+                          type: integer
+
+    VisitedCountry:
+      type: object
+      properties:
+        user_id:
+          type: integer
+        country_id:
+          type: integer
+        visit_date:
+          type: string
+          format: date-time
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+
+    Country:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        iso_alpha2:
+          type: string
+        iso_alpha3:
+          type: string
+        numeric_code:
+          type: string
+        dialing_code:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+
+    PostImage:
+      type: object
+      properties:
+        id:
+          type: integer
+        post_id:
+          type: integer
+        image_url:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+
+    PlaceImage:
+      type: object
+      properties:
+        id:
+          type: integer
+        place_id:
+          type: integer
+        image_url:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+
+    SavedPost:
+      type: object
+      properties:
+        id:
+          type: integer
+        user_id:
+          type: integer
+        post_id:
+          type: integer
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+
+    PostLike:
+      type: object
+      properties:
+        id:
+          type: integer
+        user_id:
+          type: integer
+        post_id:
+          type: integer
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+
+    FeedInteraction:
+      type: object
+      properties:
+        id:
+          type: integer
+        user_id:
+          type: integer
+        post_id:
+          type: integer
+        interaction_type:
+          type: string
+          enum: [view, like, comment, share, save]
+        created_at:
+          type: string
+          format: date-time
+
+    AuthResponse:
+      type: object
+      properties:
+        token:
+          type: string
+        user:
+          $ref: "#/components/schemas/User"
+
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+        message:
+          type: string
+        statusCode:
+          type: integer
+
+paths:
+  # Auth endpoints
+  /auth/login:
+    post:
+      summary: Log in a user
+      tags: [Auth]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                password:
+                  type: string
+      responses:
+        "200":
+          description: Successful login
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthResponse"
+        "400":
+          description: Invalid credentials
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "500":
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /auth:
+    post:
+      summary: Create a new user
+      tags: [Auth]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                password:
+                  type: string
+                name:
+                  type: string
+                birth_date:
+                  type: string
+                  format: date
+                gender:
+                  type: string
+                  enum: [male, female, other]
+                country_id:
+                  type: integer
+      responses:
+        "201":
+          description: User created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+        "400":
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /auth/refreshToken:
+    post:
+      summary: Refresh authentication token
+      tags: [Auth]
+      responses:
+        "200":
+          description: Token refreshed
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  token:
+                    type: string
+
+  /auth/send-otp/{email}:
+    post:
+      summary: Send OTP to user email
+      tags: [Auth]
+      parameters:
+        - in: path
+          name: email
+          required: true
+          schema:
+            type: string
+          description: Email to send OTP to
+      responses:
+        "200":
+          description: OTP sent
+
+  /auth/verify-otp:
+    post:
+      summary: Verify OTP and update password
+      tags: [Auth]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                otp:
+                  type: string
+                newPassword:
+                  type: string
+      responses:
+        "200":
+          description: OTP verified and password updated
+
+  # Comments endpoints
+  /comments/posts/{postId}/:
+    post:
+      summary: Create a comment or reply on a post
+      tags: [Comments]
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: postId
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                description:
+                  type: string
+                  description: The comment text
+                parentCommentId:
+                  type: integer
+                  nullable: true
+                  description: ID of parent comment if this is a reply (optional for top-level comments)
+      responses:
+        "201":
+          description: Comment added successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Comment"
+
+    get:
+      summary: Get comments for a post
+      tags: [Comments]
+      parameters:
+        - in: path
+          name: postId
+          required: true
+          schema:
+            type: string
+        - in: query
+          name: page
+          schema:
+            type: integer
+        - in: query
+          name: limit
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: List of comments for the post
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  comments:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/Comment"
+                  total:
+                    type: integer
+                  page:
+                    type: integer
+                  limit:
+                    type: integer
+
+  /comments/{commentId}:
+    put:
+      summary: Update a comment
+      tags: [Comments]
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: commentId
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                description:
+                  type: string
+      responses:
+        "200":
+          description: Comment updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Comment"
+
+    delete:
+      summary: Delete a comment
+      tags: [Comments]
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: commentId
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Comment deleted
+
+  # Reviews endpoints
+  /reviews/places/{placeId}:
+    post:
+      summary: Create a review for a place
+      tags: [Reviews]
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: placeId
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                description:
+                  type: string
+                  description: Review text
+                rating:
+                  type: number
+                  format: float
+                  minimum: 0.0
+                  maximum: 5.0
+                  description: Rating from 0 to 5
+      responses:
+        "201":
+          description: Review created successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Review"
+        "400":
+          description: Invalid rating or already reviewed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+    get:
+      summary: Get reviews for a place
+      tags: [Reviews]
+      parameters:
+        - in: path
+          name: placeId
+          required: true
+          schema:
+            type: string
+        - in: query
+          name: page
+          schema:
+            type: integer
+        - in: query
+          name: limit
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: List of reviews for the place
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  reviews:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/Review"
+                  totalReviews:
+                    type: integer
+                  currentPage:
+                    type: integer
+                  totalPages:
+                    type: integer
+
+  /reviews/users/{userId}:
+    get:
+      summary: Get reviews by a specific user
+      tags: [Reviews]
+      parameters:
+        - in: path
+          name: userId
+          required: true
+          schema:
+            type: string
+        - in: query
+          name: page
+          schema:
+            type: integer
+        - in: query
+          name: limit
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: List of user's reviews
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  reviews:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/Review"
+                  totalReviews:
+                    type: integer
+                  currentPage:
+                    type: integer
+                  totalPages:
+                    type: integer
+
+  /reviews/{reviewId}:
+    put:
+      summary: Update a review
+      tags: [Reviews]
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: reviewId
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                description:
+                  type: string
+                rating:
+                  type: number
+                  format: float
+                  minimum: 0.0
+                  maximum: 5.0
+      responses:
+        "200":
+          description: Review updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Review"
+
+    delete:
+      summary: Delete a review
+      tags: [Reviews]
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: reviewId
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Review deleted successfully
+
+  # Posts endpoints
+  /posts/create-post:
+    post:
+      summary: Create a new post
+      tags: [Posts]
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                content:
+                  type: string
+                visibility:
+                  type: string
+                  enum: [public, private, only me]
+                images:
+                  type: array
+                  items:
+                    type: string
+                    format: binary
+      responses:
+        "201":
+          description: Post created successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Post"
+
+  /posts/update-post/{postId}:
+    put:
+      summary: Update a post
+      tags: [Posts]
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: postId
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                content:
+                  type: string
+                visibility:
+                  type: string
+                  enum: [public, private, only me]
+      responses:
+        "200":
+          description: Post updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Post"
+
+  /posts/delete-post/{postId}:
+    delete:
+      summary: Delete a post
+      tags: [Posts]
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: postId
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Post deleted successfully
+
+  /posts/{postId}/like:
+    post:
+      summary: Like or unlike a post
+      tags: [Posts]
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: postId
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Post like status toggled
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  liked:
+                    type: boolean
+                  likesCount:
+                    type: integer
+
+  /posts/user/{userId}:
+    get:
+      summary: Get posts by a specific user
+      tags: [Posts]
+      parameters:
+        - in: path
+          name: userId
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: List of user posts
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Post"
+
+  /posts/saved-posts:
+    get:
+      summary: Get saved posts
+      tags: [Posts]
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: List of saved posts
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Post"
+
+  /posts/toggle-save/{postId}:
+    post:
+      summary: Toggle save status of a post
+      tags: [Posts]
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: postId
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Post save status toggled
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  saved:
+                    type: boolean
+
+  # Friends endpoints
+  /friends/get-friends/{userId}:
+    get:
+      summary: Get a user's friends
+      tags: [Friends]
+      parameters:
+        - in: path
+          name: userId
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: List of user's friends
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/User"
+
+  /friends/friendRequests:
+    get:
+      summary: Get friend requests
+      tags: [Friends]
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: List of friend requests
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  allOf:
+                    - $ref: "#/components/schemas/Friend"
+                    - type: object
+                      properties:
+                        sender:
+                          $ref: "#/components/schemas/User"
+
+    put:
+      summary: Update friend request status
+      tags: [Friends]
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                requestId:
+                  type: string
+                status:
+                  type: string
+                  enum: [accepted, rejected]
+      responses:
+        "200":
+          description: Friend request updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Friend"
+
+  # Users endpoints
+  /users:
+    get:
+      summary: Get all users
+      tags: [Users]
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: List of users
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/User"
+
+  # Profile endpoints
+  /profile/{userId}:
+    get:
+      summary: Get user profile
+      tags: [Profile]
+      parameters:
+        - in: path
+          name: userId
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: User profile data
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+
+  /profile/edit-profile:
+    put:
+      summary: Edit user profile
+      tags: [Profile]
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                bio:
+                  type: string
+                dateOfBirth:
+                  type: string
+                  format: date
+                gender:
+                  type: string
+                  enum: [male, female, other]
+                marital_status:
+                  type: string
+                  enum: [single, married, divorced]
+      responses:
+        "200":
+          description: Profile updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+
+  # Trip endpoints
+  /trip/travel-info:
+    post:
+      summary: Get travel information
+      tags: [Trip]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                sourceCountry:
+                  type: string
+                sourceCity:
+                  type: string
+                destinationCountry:
+                  type: string
+                destinationCity:
+                  type: string
+                days:
+                  type: integer
+                style:
+                  type: string
+                  enum: [budget, moderate, luxury]
+                pace:
+                  type: string
+                  enum: [slow-pace, moderate, fast-pace]
+                tripPreferences:
+                  type: array
+                  items:
+                    type: string
+      responses:
+        "200":
+          description: Travel information retrieved
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    type: object
+                    properties:
+                      destination:
+                        type: object
+                      tripDetails:
+                        type: object
+                      tripPlan:
+                        type: object
+                      visaRequirements:
+                        type: object
+                      currencyInfo:
+                        type: object
+                      electricalInfo:
+                        type: object
+                      packingList:
+                        type: array
+                        items:
+                          type: string
+
+  /trip:
+    post:
+      summary: Create a new trip
+      tags: [Trip]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                tripDescription:
+                  type: string
+                startTime:
+                  type: string
+                  format: date-time
+                endTime:
+                  type: string
+                  format: date-time
+                tripStyle:
+                  type: string
+                  enum: [budget, moderate, luxury]
+                tripPace:
+                  type: string
+                  enum: [slow-pace, moderate, fast-pace]
+                places:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      id:
+                        type: integer
+                      notes:
+                        type: string
+                      time:
+                        type: string
+                      day:
+                        type: integer
+      responses:
+        "200":
+          description: Trip created successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  message:
+                    type: string
+                  data:
+                    $ref: "#/components/schemas/Trip"
+
+  /trip/{id}:
+    get:
+      summary: Get a specific trip
+      tags: [Trip]
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+          description: Trip ID
+      responses:
+        "200":
+          description: Trip details retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    $ref: "#/components/schemas/Trip"
+        "404":
+          description: Trip not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  message:
+                    type: string
+
+    put:
+      summary: Update a specific trip
+      tags: [Trip]
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+          description: Trip ID
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                tripDescription:
+                  type: string
+                startTime:
+                  type: string
+                  format: date-time
+                endTime:
+                  type: string
+                  format: date-time
+                tripStyle:
+                  type: string
+                  enum: [budget, moderate, luxury]
+                tripPace:
+                  type: string
+                  enum: [slow-pace, moderate, fast-pace]
+                places:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      id:
+                        type: integer
+                      notes:
+                        type: string
+                      time:
+                        type: string
+                      day:
+                        type: integer
+      responses:
+        "200":
+          description: Trip updated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  message:
+                    type: string
+                  data:
+                    $ref: "#/components/schemas/Trip"
+        "404":
+          description: Trip not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  message:
+                    type: string
+
+  /trip/user/{userId}:
+    get:
+      summary: Get all trips for a specific user
+      tags: [Trip]
+      parameters:
+        - in: path
+          name: userId
+          required: true
+          schema:
+            type: integer
+          description: User ID
+      responses:
+        "200":
+          description: User trips retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/Trip"
+        "404":
+          description: No trips found for user
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  message:
+                    type: string
+
+  /trip/user/{userId}/{tripId}:
+    delete:
+      summary: Delete a specific trip for a user
+      tags: [Trip]
+      parameters:
+        - in: path
+          name: userId
+          required: true
+          schema:
+            type: integer
+          description: User ID
+        - in: path
+          name: tripId
+          required: true
+          schema:
+            type: integer
+          description: Trip ID
+      responses:
+        "200":
+          description: Trip deleted successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  message:
+                    type: string
+        "404":
+          description: Trip not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  message:
+                    type: string
+
+  # Feed endpoints
+  /feed:
+    get:
+      summary: Get personalized smart feed
+      tags: [Feed]
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Personalized feed content
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Post"
+
+  /feed/interactions:
+    post:
+      summary: Record feed interactions
+      tags: [Feed]
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                postId:
+                  type: string
+                interactionType:
+                  type: string
+                  enum: [view, like, comment, share, save]
+      responses:
+        "200":
+          description: Interaction recorded
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FeedInteraction"
+
+  # Places endpoints
+  /places:
+    post:
+      summary: Create a new place
+      tags: [Places]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                country:
+                  type: string
+                city:
+                  type: string
+                longitude:
+                  type: number
+                  format: float
+                latitude:
+                  type: number
+                  format: float
+                opening_time:
+                  type: string
+                  format: time
+                closing_time:
+                  type: string
+                  format: time
+      responses:
+        "201":
+          description: Place created successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Place"
+
+    get:
+      summary: Get all places
+      tags: [Places]
+      responses:
+        "200":
+          description: List of all places
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Place"
+
+  /places/country/{country}:
+    get:
+      summary: Get places by country
+      tags: [Places]
+      parameters:
+        - in: path
+          name: country
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: List of places in the specified country
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Place"
+
+  /places/{id}:
+    get:
+      summary: Get place by ID
+      tags: [Places]
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Place details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Place"
+
+    put:
+      summary: Update place
+      tags: [Places]
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                country:
+                  type: string
+                city:
+                  type: string
+                longitude:
+                  type: number
+                  format: float
+                latitude:
+                  type: number
+                  format: float
+                opening_time:
+                  type: string
+                  format: time
+                closing_time:
+                  type: string
+                  format: time
+      responses:
+        "200":
+          description: Place updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Place"
+
+    delete:
+      summary: Delete place
+      tags: [Places]
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Place deleted successfully
+
+  # VisitedCountries endpoints
+  /visited-countries/{id}:
+    get:
+      summary: Get visited countries by user ID
+      tags: [VisitedCountries]
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: List of visited countries
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  allOf:
+                    - $ref: "#/components/schemas/VisitedCountry"
+                    - type: object
+                      properties:
+                        country:
+                          $ref: "#/components/schemas/Country"
+
+  /visited-countries:
+    post:
+      summary: Add a visited country
+      tags: [VisitedCountries]
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                userId:
+                  type: string
+                countryId:
+                  type: string
+                visitDate:
+                  type: string
+                  format: date
+      responses:
+        "201":
+          description: Visited country added
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/VisitedCountry"
+
+  /visited-countries/{user_id}/{country_id}:
+    delete:
+      summary: Delete a visited country
+      tags: [VisitedCountries]
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: user_id
+          required: true
+          schema:
+            type: string
+        - in: path
+          name: country_id
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Visited country deleted
+
+  # Weather endpoints
+  /weather/{city}:
+    get:
+      summary: Get weather by city
+      tags: [Weather]
+      parameters:
+        - in: path
+          name: city
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Weather data for the city
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  city:
+                    type: string
+                  temperature:
+                    type: number
+                  description:
+                    type: string
+                  humidity:
+                    type: number
+                  wind:
+                    type: number
+
+  # Upload endpoints
+  /upload/profilePicture:
+    post:
+      summary: Upload profile picture
+      tags: [Upload]
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                file:
+                  type: string
+                  format: binary
+      responses:
+        "200":
+          description: Profile picture uploaded
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  url:
+                    type: string
+
+  /upload/wallpaper:
+    post:
+      summary: Upload wallpaper
+      tags: [Upload]
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                file:
+                  type: string
+                  format: binary
+      responses:
+        "200":
+          description: Wallpaper uploaded
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  url:
+                    type: string
+
+  # Visa endpoints
+  /visa/{source}/{destination}:
+    get:
+      summary: Get visa requirements
+      tags: [Visa]
+      parameters:
+        - in: path
+          name: source
+          required: true
+          schema:
+            type: string
+          description: Source country
+        - in: path
+          name: destination
+          required: true
+          schema:
+            type: string
+          description: Destination country
+      responses:
+        "200":
+          description: Visa requirements information
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  source:
+                    type: string
+                  destination:
+                    type: string
+                  visaRequired:
+                    type: boolean
+                  visaType:
+                    type: string
+                  processingTime:
+                    type: string
+                  requirements:
+                    type: array
+                    items:
+                      type: string
